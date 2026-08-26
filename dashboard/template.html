@@ -155,7 +155,7 @@ tbody tr:hover{background:var(--blue-soft)}
 
 <div class="statusbar">
   <span>✓ ETL succeeded · star schema loaded · <b id="sb-facts">—</b> fact rows</span>
-  <span>refreshed <span id="sb-time">—</span> · built by <b>Arun Prajapati</b> · github.com/Arun3622</span>
+  <span>refreshed <b id="sb-time">—</b> · built by <b>Arun Prajapati</b> · github.com/Arun3622</span>
 </div>
 
 <script>
@@ -165,7 +165,7 @@ Chart.defaults.color="#66738c";Chart.defaults.borderColor="#eef1f6";
 Chart.defaults.font.family="'Inter',sans-serif";
 
 document.getElementById("sb-facts").textContent=Number(DATA.kpis.total_lines).toLocaleString();
-document.getElementById("sb-time").textContent=DATA.generated_at;
+document.getElementById("sb-time").textContent=(DATA.completed_on||DATA.generated_at);
 
 /* KPI band */
 (function(){

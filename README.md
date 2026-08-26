@@ -91,3 +91,5 @@ Plus recursive CTE date dimension generation, multi-table fact joins with derive
 - GitHub: [github.com/Arun3622](https://github.com/Arun3622)
 - Repository: [github.com/Arun3622/WarehouseBI-](https://github.com/Arun3622/WarehouseBI-)
 
+
+> 🗓️ **Project completed:** August 06, 2026
