@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WarehouseBI — Sales Analytics Workbook</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12294d; --navy2:#1a3a6b; --bg:#eef1f6; --card:#ffffff; --line:#d7deea;
+  --ink:#1c2536; --mut:#66738c; --blue:#2563eb; --blue-soft:#e8effd;
+  --ok:#15803d; --gold:#ca8a04;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+
+/* ======== app bar ======== */
+.appbar{background:var(--navy);color:#fff;height:48px;display:flex;align-items:center;gap:16px;padding:0 18px}
+.appbar .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+.appbar .cube{width:26px;height:26px;background:var(--blue);border-radius:5px;display:grid;place-items:center;font-size:13px}
+.bread{font-size:11.5px;color:#9db2d6}.bread b{color:#fff}
+.spacer{flex:1}
+.userchip{display:flex;align-items:center;gap:8px;background:var(--navy2);padding:5px 12px;border-radius:6px;font-size:12px}
+.userchip .av{width:22px;height:22px;border-radius:4px;background:var(--blue);display:grid;place-items:center;font-size:10px;font-weight:700}
+
+/* ribbon */
+.ribbon{background:#fff;border-bottom:1px solid var(--line);padding:8px 18px;display:flex;gap:8px;flex-wrap:wrap}
+.rbtn{border:1px solid var(--line);background:#fff;padding:6px 13px;border-radius:5px;font-size:11.5px;
+  font-weight:600;color:var(--mut);cursor:pointer;transition:all .15s}
+.rbtn:hover{border-color:var(--blue);color:var(--blue)}
+.rbtn.on{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}
+
+.page{max-width:1360px;margin:0 auto;padding:18px}
+
+/* ======== kpi band ======== */
+.kpiband{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));border:1px solid var(--line);
+  background:var(--card);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.kpi{padding:13px 16px;border-right:1px solid var(--line);opacity:0;animation:fadein .45s forwards}
+.kpi:last-child{border-right:none}
+.kpi:nth-child(2){animation-delay:.05s}.kpi:nth-child(3){animation-delay:.1s}.kpi:nth-child(4){animation-delay:.15s}
+.kpi:nth-child(5){animation-delay:.2s}.kpi:nth-child(6){animation-delay:.25s}
+.kpi:hover{background:#f8faff}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700}
+.kpi .v{font-size:19px;font-weight:700;margin-top:4px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:10.5px;margin-top:2px;color:var(--ok)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* ======== widgets ======== */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-bottom:14px}
+.w6{grid-column:span 6}.w12{grid-column:span 12}.w7{grid-column:span 7}.w5{grid-column:span 5}
+@media(max-width:980px){.w6,.w7,.w5{grid-column:span 12}}
+.widget{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  opacity:0;animation:fadein .5s forwards;transition:box-shadow .2s}
+.widget:hover{box-shadow:0 4px 14px rgba(28,37,54,.09)}
+.whead{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;
+  border-bottom:1px solid var(--line);background:#fafbfe}
+.whead b{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+.whead small{color:var(--mut);font-size:10.5px;font-weight:500}
+.dots span{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:4px;background:var(--line)}
+.dots span:first-child{background:var(--blue)}
+.wbody{padding:12px}
+.chartbox{position:relative}.h280{height:280px}.h240{height:240px}
+
+/* rfm table-style blocks */
+.rfm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.rfm-cell{border:1px solid var(--line);border-left:4px solid var(--blue);padding:11px 12px;background:#fbfcff;
+  opacity:0;transform:translateX(-12px);animation:slidein .55s forwards;transition:transform .18s,border-color .18s}
+.rfm-cell:nth-child(even){animation-delay:.07s}.rfm-cell:nth-child(3n){animation-delay:.14s}
+.rfm-cell:hover{transform:translateX(3px);border-left-color:var(--gold)}
+.rfm-cell .seg{font-weight:700;font-size:12px}
+.rfm-cell .cust{color:var(--mut);font-size:10.5px;margin-top:2px}
+.rfm-cell .rev{font-family:'Roboto Mono',monospace;font-weight:600;font-size:13.5px;margin-top:7px;color:var(--blue)}
+@keyframes slidein{to{opacity:1;transform:none}}
+
+/* cohort bars */
+.crow{display:grid;grid-template-columns:64px 1fr 52px;align-items:center;gap:9px;margin-bottom:7px;font-size:11px}
+.ct{height:16px;background:#edf0f6;border-radius:3px;overflow:hidden}
+.cf{height:100%;width:0;background:linear-gradient(90deg,#93c5fd,var(--blue));transition:width 1.4s cubic-bezier(.25,.9,.3,1)}
+
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{background:#f4f6fa;text-align:left;padding:7px 9px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--mut);border-bottom:1px solid var(--line)}
+td{padding:6.5px 9px;border-bottom:1px solid #eef1f6}
+tbody tr:nth-child(even){background:#fafbfe}
+tbody tr:hover{background:var(--blue-soft)}
+.mono{font-family:'Roboto Mono',monospace;font-size:11px}
+
+/* status bar */
+.statusbar{position:sticky;bottom:0;background:var(--navy);color:#9db2d6;font-size:11px;
+  padding:6px 18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.statusbar b{color:#fff}.statusbar .g{color:#4ade80}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="brand"><div class="cube">🏛️</div> WarehouseBI</div>
+  <div class="bread">Workbooks / Sales Analytics / <b>Sales Overview v2</b></div>
+  <div class="spacer"></div>
+  <div class="userchip"><div class="av">AP</div> Arun Prajapati</div>
+</div>
+
+<div class="ribbon">
+  <button class="rbtn on">📊 Overview</button>
+  <button class="rbtn">🗓️ Time Intelligence</button>
+  <button class="rbtn">👥 Customer 360</button>
+  <button class="rbtn">📦 Product Performance</button>
+  <button class="rbtn">🧮 SQL Notebook</button>
+</div>
+
+<div class="page">
+
+<div class="kpiband" id="kpiband"></div>
+
+<div class="grid">
+  <div class="widget w7" style="animation-delay:.3s">
+    <div class="whead"><b>Revenue Trend · Monthly</b><small>MOM growth % via LAG() window fn</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody chartbox h280"><canvas id="ch-month"></canvas></div>
+  </div>
+  <div class="widget w5" style="animation-delay:.36s">
+    <div class="whead"><b>Category Performance</b><small>revenue vs margin %</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody chartbox h280"><canvas id="ch-cat"></canvas></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="widget w7" style="animation-delay:.42s">
+    <div class="whead"><b>RFM Customer Segments</b><small>NTILE(5) scoring in pure SQL</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody rfm-grid" id="rfm"></div>
+  </div>
+  <div class="widget w5" style="animation-delay:.48s">
+    <div class="whead"><b>Cohort Activity Span</b><small>months active per signup cohort</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody" id="cohorts"></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="widget w5" style="animation-delay:.54s">
+    <div class="whead"><b>Regional Revenue</b><small>+ active customers tooltip</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody chartbox h240"><canvas id="ch-region"></canvas></div>
+  </div>
+  <div class="widget w7" style="animation-delay:.6s">
+    <div class="whead"><b>Top Customers by Lifetime Value</b><small>GROUP BY customer_key ORDER BY revenue DESC</small><div class="dots"><span></span><span></span><span></span></div></div>
+    <div class="wbody">
+      <table>
+        <thead><tr><th>#</th><th>Customer</th><th>Segment</th><th>Orders</th><th style="text-align:right">LTV</th></tr></thead>
+        <tbody id="topcust"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="statusbar">
+  <span>✓ ETL succeeded · star schema loaded · <b id="sb-facts">—</b> fact rows</span>
+  <span>refreshed <span id="sb-time">—</span> · built by <b>Arun Prajapati</b> · github.com/Arun3622</span>
+</div>
+
+<script>
+const DATA=__DATA_JSON__;
+const fmt$=v=>"$"+Number(v).toLocaleString("en-US",{maximumFractionDigits:0});
+Chart.defaults.color="#66738c";Chart.defaults.borderColor="#eef1f6";
+Chart.defaults.font.family="'Inter',sans-serif";
+
+document.getElementById("sb-facts").textContent=Number(DATA.kpis.total_lines).toLocaleString();
+document.getElementById("sb-time").textContent=DATA.generated_at;
+
+/* KPI band */
+(function(){
+  const k=DATA.kpis;
+  const items=[
+    ["Total Revenue",fmt$(k.revenue),"+ YoY growth"],
+    ["Gross Profit",fmt$(k.profit),(k.profit/k.revenue*100).toFixed(1)+"% margin"],
+    ["Orders",Number(k.orders).toLocaleString(),"distinct order_ids"],
+    ["Active Customers",Number(k.customers).toLocaleString(),"with ≥1 purchase"],
+    ["Fact Rows",Number(k.total_lines).toLocaleString(),"sales line items"],
+    ["Avg Line Value","$"+k.avg_line_value,"per line item"],
+  ];
+  document.getElementById("kpiband").innerHTML=items.map(([l,v,d])=>`
+    <div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
+})();
+
+/* monthly combo */
+new Chart(document.getElementById("ch-month"),{
+ type:"bar",
+ data:{labels:DATA.monthly.map(m=>`${m.month_name} '${String(m.year).slice(2)}`),
+  datasets:[
+   {type:"line",label:"MoM %",data:DATA.monthly.map(m=>m.mom_growth_pct),yAxisID:"y1",
+    borderColor:"#ca8a04",tension:.35,borderWidth:2,pointRadius:2.5,pointBackgroundColor:"#ca8a04"},
+   {label:"Revenue",data:DATA.monthly.map(m=>m.revenue),
+    backgroundColor:m=>m.raw===Math.max(...DATA.monthly.map(x=>x.revenue))?"#2563eb":"#a8c3f7",
+    borderRadius:4}]},
+ options:{maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+  animation:{delay:ctx=>ctx.dataIndex*55,duration:1100,easing:"easeOutCubic"},
+  plugins:{legend:{labels:{usePointStyle:true,boxWidth:8}}},
+  scales:{y:{ticks:{callback:v=>"$"+(v/1000).toFixed(0)+"k"}},
+          y1:{position:"right",ticks:{callback:v=>v+"%"},grid:{drawOnChartArea:false}}}}});
+
+/* category */
+new Chart(document.getElementById("ch-cat"),{
+ type:"bar",
+ data:{labels:DATA.category.map(c=>c.category),
+  datasets:[
+   {label:"Margin %",type:"line",data:DATA.category.map(c=>c.margin_pct),yAxisID:"y1",
+    borderColor:"#15803d",tension:.35,borderWidth:2,pointRadius:4},
+   {label:"Profit",data:DATA.category.map(c=>c.profit),backgroundColor:"#15803d",borderRadius:4},
+   {label:"Revenue",data:DATA.category.map(c=>c.revenue),backgroundColor:"#93c5fd",borderRadius:4}]},
+ options:{maintainAspectRatio:false,
+  plugins:{legend:{labels:{usePointStyle:true,boxWidth:8}}},
+  scales:{y:{stacked:false,ticks:{callback:v=>"$"+(v/1000).toFixed(0)+"k"}},
+          y1:{position:"right",ticks:{callback:v=>v+"%"},grid:{drawOnChartArea:false}}},
+  animation:{duration:1200,easing:"easeOutQuart"}}});
+
+/* RFM cells */
+(function(){
+  const colors=["#2563eb","#7c3aed","#0891b2","#ca8a04","#dc2626","#15803d"];
+  document.getElementById("rfm").innerHTML=DATA.rfm.map((r,i)=>`
+    <div class="rfm-cell" style="animation-delay:${i*.09}s;border-left-color:${colors[i%colors.length]}">
+      <div class="seg">${r.segment}</div>
+      <div class="cust">${Number(r.customers).toLocaleString()} customers</div>
+      <div class="rev">${fmt$(r.revenue)}</div></div>`).join("");
+})();
+
+/* cohorts */
+(function(){
+  const root=document.getElementById("cohorts");
+  const rows=DATA.cohorts.slice(-13);
+  root.innerHTML=rows.map(c=>`
+    <div class="crow">
+      <span class="mono">${c.cohort}</span>
+      <div class="ct"><div class="cf" data-w="${(c.months_active/Math.max(...rows.map(x=>x.months_active))*100).toFixed(0)}"></div></div>
+      <span class="mono">${c.size}·M${c.months_active}</span></div>`).join("");
+  requestAnimationFrame(()=>setTimeout(()=>
+    root.querySelectorAll(".cf").forEach(f=>f.style.width=f.dataset.w+"%"),300));
+})();
+
+/* region */
+new Chart(document.getElementById("ch-region"),{
+ type:"bar",
+ data:{labels:DATA.region.map(r=>r.region),
+  datasets:[{data:DATA.region.map(r=>r.revenue),
+   backgroundColor:r=>r.raw>=Math.max(...DATA.region.map(x=>x.revenue))?"#2563eb":"#a8c3f7",
+   borderRadius:4}]},
+ options:{maintainAspectRatio:false,plugins:{legend:{display:false},
+  tooltip:{callbacks:{label:c=>" "+fmt$(c.raw)+" · "+
+    DATA.region[c.dataIndex].active_customers.toLocaleString()+" active customers"}}},
+  scales:{y:{ticks:{callback:v=>"$"+(v/1000).toFixed(0)+"k"}}},
+  animation:{delay:ctx=>ctx.dataIndex*90,duration:1300,easing:"easeOutBack"}}});
+
+/* top customers */
+(function(){
+  document.getElementById("topcust").innerHTML=DATA.top_customers.map((c,i)=>`
+    <tr style="opacity:0;animation:fadein .4s ${i*.05}s forwards">
+      <td class="mono">${i+1}</td><td style="font-weight:600">${c.customer}</td>
+      <td><span style="color:var(--mut)">${c.segment}</span></td>
+      <td class="mono">${c.orders}</td>
+      <td class="mono" style="text-align:right;font-weight:600;color:var(--blue)">${fmt$(c.revenue)}</td></tr>`).join("");
+})();
+</script>
+</body>
+</html>
